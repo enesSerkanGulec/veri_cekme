@@ -146,7 +146,7 @@ namespace json
                 if (s == "-1") break;
                 if (s == "")
                 {
-                    MessageBox.Show((i + 1).ToString() + ". veri paketi çekilirken veri paketi boş döndü. Bu son paketler için bir problem oluşturmaz. Fakat daha ilk pakette ise tekrar deneyiniz.");
+                    MessageBox.Show((i + 1).ToString() + ". veri paketi çekilirken veri paketi boş döndü. Bu son paketler için bir problem oluşturmaz. Fakat daha ilk pakette ise tekrar deneyiniz.", "Hata !", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     break;
                 }
 
@@ -157,6 +157,12 @@ namespace json
 
                 //XmlNode[] elemlist = xml.GetElementsByTagName("Item").Cast<XmlNode>().ToArray();
                 XmlNodeList elemlist = xml.GetElementsByTagName("Item");
+                if (elemlist.Count == 0)
+                {
+                    MessageBox.Show((i + 1).ToString() + ". veri paketi çekilirken veri paketi boş döndü. Bu son paketler için bir problem oluşturmaz. Fakat daha ilk pakette ise blok miktarını azalatıp tekrar deneyiniz.", "Hata !", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+                }
+
 
                 if (i == 0)
                     if (!tagkontrol(elemlist[0]))
@@ -170,6 +176,18 @@ namespace json
                 Item item = new Item();
                 for (int j = 0; j < elemlist.Count; j += 2) // Veri Tekrarı olduğundan şimdilik bir atlayarak alıyor.
                 {
+                    if (!tümVeriToolStripMenuItem.Checked)
+                    {
+
+                        if (resmiOlanlarToolStripMenuItem.Checked && elemlist[j].SelectSingleNode("Picture").InnerText == "") continue;
+                        if (fiyat0DanBüyükOlanlarToolStripMenuItem.Checked)
+                        {
+                            string f = elemlist[j].SelectSingleNode("Price").InnerText;
+                            decimal fiyat;
+                            if (!decimal.TryParse(f, out fiyat)) fiyat = 0;
+                            if (fiyat == 0) continue;
+                        }
+                    }
                     özeldurumKontrol(elemlist[j]);
                     item.içeAktar(elemlist[j]);
                     writer.Write(item.toXmlString());
@@ -181,6 +199,7 @@ namespace json
             writer.Close();
             dosya.Close();
             label3.Text = "işlem tamamlandı.. "+ DateTime.Now.Subtract(t).TotalSeconds.ToString() + " saniye sürdü. Toplam satır sayısı: " + adet.ToString();
+            System.Media.SystemSounds.Beep.Play();
         }
         string veriÇek(int başlama = 1, int bitiş = 2)
         {
@@ -231,6 +250,29 @@ namespace json
         private void numericUpDown2_ValueChanged(object sender, EventArgs e)
         {
             numericUpDown1.Maximum = numericUpDown2.Value;
+        }
+
+        private void toolStripMenuItem4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tümVeriToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tümVeriToolStripMenuItem.Checked = true;
+            fiyat0DanBüyükOlanlarToolStripMenuItem.Checked = resmiOlanlarToolStripMenuItem.Checked = false;
+        }
+
+        private void fiyat0DanBüyükOlanlarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            fiyat0DanBüyükOlanlarToolStripMenuItem.Checked = !fiyat0DanBüyükOlanlarToolStripMenuItem.Checked;
+            tümVeriToolStripMenuItem.Checked = !fiyat0DanBüyükOlanlarToolStripMenuItem.Checked && !resmiOlanlarToolStripMenuItem.Checked;
+        }
+
+        private void resmiOlanlarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resmiOlanlarToolStripMenuItem.Checked = !resmiOlanlarToolStripMenuItem.Checked;
+            tümVeriToolStripMenuItem.Checked = !fiyat0DanBüyükOlanlarToolStripMenuItem.Checked && !resmiOlanlarToolStripMenuItem.Checked;
         }
     }
 }
